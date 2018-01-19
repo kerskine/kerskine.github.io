@@ -1,7 +1,7 @@
 ---
-title: "Human Activity"
+title: "Human Activity Recognition"
 author: "Keith Erskine"
-date: "1/9/2018"
+date: "1/19/2018"
 output: html_document
 ---
 
@@ -9,22 +9,122 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## Summary
+Using a random forest method, a model with 99% was produced. However to do it, parallel computing was required. 
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+The model is based on sensing data from measurement systems (acceleration, gyroscope, magnetometer) on test subjects doing a curl (weight lifting exercise). During testing, each exercise was evaluated for correct form, or not, and given a designation; "A" for proper form, "B, C, D, E" for various improper forms. The goal was to develop model that would predict if someone is doing the exercise correctly, and if not, which of the bad forms was being performed.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
-```{r cars}
-summary(cars)
+### Acknowledgements
+
+Special thanks goes to the Pontifical [Catholic University of Rio de Janeiro, Departamento de Informática](http://groupware.les.inf.puc-rio.br/har) for the data set and research used in this analysis.
+
+## Data Acquisition and Cleaning
+
+First, we need to download the data sets create some tibbles (I'm using tidyverse, so they're tibbles and not dataframes).
+
+```{r Download and load tibbles, cache=TRUE, echo=TRUE, message=FALSE}
+library(tidyverse)
+library(caret)
+
+train <- read_csv("traincsv")
+
+test <- read_csv("testcsv")
 ```
 
-## Including Plots
+You can see that there's a lot of #DIV/0 values in the training data set that read_csv takes care of with "NA"s. The test training set didn't have these problems which made me wonder what was different out it. 
 
-You can also embed plots, for example:
+Using the view command, we can see that whole swaths of data are missing from the test data set. Since there's no sense in trying to build a predictive model on data that's ignored, we'll clean up both training and test data sets to have the same variables. 
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r Clean up and remove variables, cache=TRUE, echo=TRUE}
+dim(test)
+dtest <- test %>% select_if(~ !any(is.na(.))) # Get rid of NA variables
+dtest <- dtest %>% select(-X1, -user_name, -raw_timestamp_part_1, 
+                          -raw_timestamp_part_2, -cvtd_timestamp, -new_window,
+                          -num_window, -new_window, -problem_id) # Get rid of housekeeping variables
+dim(dtest)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Now with the test data set done, it's easy to get the training data set in shape.
+
+
+```{r Clean up training data, cache=TRUE, echo=TRUE}
+goodcols <- names(dtest)
+dtrain <- train %>% select(goodcols, classe)
+dtrain <- dtrain[complete.cases(dtrain),] # One record had some missing values
+dtrain$classe <- as.factor(dtrain$classe) # Convert classe from character to factor
+dim(dtrain)
+```
+
+So the training data is a very large set of 19,621 observations while the test set is only 20 observations. **This will greatly reduce our out of sample error** because of the size difference (980x) between training and test data sets.
+
+## Exploratory Analysis
+
+Here's a graph that tries to look at the relationship between the acceleration between the arm and the dumbbell:
+
+```{r Graph something-anything, cache=TRUE, echo=FALSE}
+g <- ggplot(dtrain, aes(total_accel_arm, total_accel_dumbbell))
+g + geom_point(aes(color = classe))
+```
+
+The colors represent the "classe" our the outcome variable. "A" means you're doing a curl correctly, "B - E" are incorrect form. What's interesting in this graph is that the proper form lies outside the blob of bad form. 
+
+However, we can't look at 2704 (52x52) graphs to find the meaningful variables. Instead, we can try some predictive models and figure out one that is accurate enough for our purposes (e.g. passing the quiz).
+
+## Predictive Model
+
+Since the outcome is a factor (A, B, ..) and thus non-linear, the best type of predictive model is a decision tree where we factor the effect of predictive variables to predict an outcome. The first attempts at modeling were with classification and regression tree (rpart). The first model was took accelerometer from all axis as the predictors.
+
+**Model 1: Accelerometers as Predictors**
+
+```{r 1st Model, cache=TRUE, echo=FALSE}
+modaccel <- dtrain %>% train(classe ~ 
+                            accel_belt_x + accel_belt_y + accel_belt_z +
+                            accel_arm_x + accel_arm_y + accel_arm_z +
+                            accel_dumbbell_x + accel_dumbbell_y + accel_dumbbell_z +
+                            accel_forearm_x + accel_forearm_y + accel_forearm_z + 
+                            total_accel_arm + total_accel_belt + 
+                            total_accel_dumbbell + total_accel_forearm,
+                    method = "rpart", data = .)
+confusionMatrix(modaccel)
+```
+
+This model isn't very accurate. Maybe if we use all the variables as predictors we would get more accurate model.
+
+**Model 2: Use ALL the Variables**
+
+```{r 2nd Model, cache=TRUE, echo=FALSE}
+
+modaccel2 <- dtrain %>% train(classe ~ ., method = "rpart", data = .)
+confusionMatrix(modaccel2)
+```
+
+Better, but not by much. It's time to call in the big guns -- Random Forest! To do this, we'll need to use parallel processing and run it on a number of CPU cores (this analysis was done on a 4-core processor). In addition, we'll do cross validation of the predicting variables using k-fold (number of folds = 5).
+
+You can find out more about parallel processing from [Len Greski's excellent writeup](https://github.com/lgreski/datasciencectacontent/blob/master/markdown/pml-randomForestPerformance.md).
+
+**Model 3: Random Forest**
+
+```{r Random Forest, cache=TRUE, echo=TRUE, message=FALSE}
+library(parallel)
+library(doParallel)
+cluster <- makeCluster(detectCores() - 1) # Leave a core for the OS
+registerDoParallel(cluster)
+fitcontrol <- trainControl(method = "cv", number = 5, allowParallel = TRUE)
+ptm <- proc.time()
+modrf <- dtrain %>% train(classe ~ ., method = "rf", trControl = fitcontrol, data = .)
+confusionMatrix(modrf)
+proc.time() - ptm
+stopCluster(cluster); registerDoSEQ() # Turn off parallel processing
+```
+
+## Results
+
+Using a random forest method, I was able to produce a model with 99% accuracy! Applying this to the test data gives a 100% on the quiz that follows.
+
+```{r Results, cache=TRUE}
+testresults <- predict(modrf, newdata = dtest)
+testresults
+```
+
+
