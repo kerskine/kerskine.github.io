@@ -1,0 +1,117 @@
+library(tidyverse)
+library(lubridate)
+library(readxl)
+
+# Download csv files from Mass Dept of Public Health
+
+download.file("https://www.mass.gov/doc/covid-19-raw-data-december-1-2020/download", "./data/data.zip")
+unzip("./data/data.zip", exdir = "./data")
+
+# Read and clean cases
+
+cases <- read_excel("./data/CasesByDate.xlsx") %>% 
+                select(1:3) 
+        names(cases) <- c("date", "pos_total", "pos_new")
+# cases <- cases %>% mutate(date = mdy(date))
+
+# Read and clean hospital
+
+hospital <- read_excel("./data/Hospitalization from Hospitals.xlsx") %>% 
+                select(1:3, 5, 6)
+                names(hospital) <- c("date", "hos_total", "hos_new", "icu_total", "icu_new")
+        
+# Read and clean deaths
+
+deaths <- read_excel("./data/DateofDeath.xlsx") %>% 
+                select(1:3)
+                names(deaths) <- c("date", "dea_new", "dea_total")
+        
+
+
+# join and plot results
+
+model_data <- right_join(cases, hospital)
+model_data <- left_join(model_data, deaths)
+
+# Create the "as of" date for the graph titles. This will be the last date in model_data
+
+asof_date <- model_data[[nrow(model_data), 1]]
+
+# Daily case, hospital and icu graph
+
+model_data %>% select(date, pos_new, hos_total, icu_total) %>% 
+                pivot_longer(c("pos_new", "hos_total", "icu_total"), names_to = "type", 
+                                values_to = "cases") %>% 
+                ggplot(aes(x = date, y = cases, color = type)) +
+                geom_line(alpha = 0.4) + geom_smooth(se = FALSE) + 
+                labs(x = "Date", y = "Cases", 
+                     title = "Comparison of New Daily Covid-19 Cases with Hospital and ICU Census",
+                     subtitle = paste("Source: Mass Dept of Public Health", asof_date), 
+                     caption = "Keith Erskine") + 
+                ggsave("pos_hosp_icu.png",
+                       device = "png",
+                       path = "./images",
+                       dpi = "screen")
+
+# Daily case and deaths graph
+
+model_data %>% select(date, pos_new, dea_new) %>% 
+        pivot_longer(c("pos_new", "dea_new"), names_to = "type", 
+                     values_to = "cases") %>% 
+        ggplot(aes(x = date, y = cases, color = type)) +
+        geom_point(alpha = 0.3) + geom_smooth(se = FALSE) + 
+        labs(x = "Date", y = "Cases", 
+             title = "New Daily Covid-19 Cases and Reported Deaths",
+             subtitle = paste("Source: Mass Dept of Public Health", asof_date), 
+             caption = "Keith Erskine") +
+        ggsave("pos_dea.png",
+               device = "png",
+               path = "./images",
+               dpi = "screen")
+
+# Alt graph - Hospital, ICU, and deaths
+
+model_data %>% select(date, hos_total, icu_total, dea_new) %>% 
+        pivot_longer(c("hos_total", "icu_total", "dea_new"), names_to = "type", 
+                     values_to = "cases") %>% 
+        ggplot(aes(x = date, y = cases, color = type)) +
+        geom_line(alpha = 0.4) + geom_smooth(se = FALSE) + 
+        labs(x = "Date", y = "Cases", 
+             title = "Comparison of Hospital and ICU Census with Daily Reported Deaths",
+             subtitle = paste("Source: Mass Dept of Public Health", asof_date), 
+             caption = "Keith Erskine") +
+        ggsave("hos_icu_dea.png",
+               device = "png",
+               path = "./images",
+               dpi = "screen")
+
+
+# Yet another
+
+model_data %>% select(date, hos_new, icu_new) %>% 
+        filter(date >= as_date("2020-09-01")) %>% 
+        pivot_longer(c("hos_new", "icu_new"), names_to = "type", 
+                     values_to = "cases") %>% 
+        ggplot(aes(x = date, y = cases, color = type)) +
+        geom_line(alpha = 0.4) + geom_smooth(se = FALSE) + 
+        labs(x = "Date", y = "Change in Number of Cases", 
+             title = "Net Change in Hospital and ICU Census Covid-19 Cases \nfrom Sept. 01, 2020",
+             subtitle = paste("Source: Mass Dept of Public Health", asof_date), 
+             caption = "Keith Erskine") +
+        ggsave("hosp_icu_since01sep.png",
+               device = "png",
+               path = "./images",
+               dpi = "screen")
+
+# Deaths
+
+model_data %>% ggplot(aes(x = date, y = dea_new)) + 
+        geom_point(color = "red", alpha = 0.3) + geom_smooth(se = FALSE, color = "red") +
+        labs(x = "Date", y = "Deaths", 
+             title = "Deaths Due to Covid-19",
+             subtitle = paste("Source: Mass Dept of Public Health", asof_date), 
+             caption = "Keith Erskine") +
+        ggsave("dea.png",
+                device = "png",
+                path = "./images",
+                dpi = "screen")
