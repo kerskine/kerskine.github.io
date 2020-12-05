@@ -4,7 +4,7 @@ library(readxl)
 
 # Download csv files from Mass Dept of Public Health
 
-download.file("https://www.mass.gov/doc/covid-19-raw-data-december-4-2020/download", "./data/data.zip")
+download.file("https://www.mass.gov/doc/covid-19-raw-data-december-5-2020/download", "./data/data.zip")
 unzip("./data/data.zip", exdir = "./data")
 
 # Read and clean cases
@@ -48,6 +48,8 @@ model_data %>% select(date, pos_new, hos_total, icu_total) %>%
                      title = "Comparison of New Daily Covid-19 Cases with Hospital and ICU Census",
                      subtitle = paste("Source: Mass Dept of Public Health", asof_date), 
                      caption = "Keith Erskine") + 
+                scale_color_discrete(name = "Type of Case", 
+                                    labels = c("Hospital Census", "ICU Census", "New Positive Cases")) +
                 ggsave("pos_hosp_icu.png",
                        device = "png",
                        path = "./images",
@@ -63,7 +65,9 @@ model_data %>% select(date, pos_new, dea_new) %>%
         labs(x = "Date", y = "Cases", 
              title = "New Daily Covid-19 Cases and Reported Deaths",
              subtitle = paste("Source: Mass Dept of Public Health", asof_date), 
-             caption = "Keith Erskine") +
+             caption = "Keith Erskine") + 
+        scale_color_discrete(name = "Type of Case", 
+                             labels = c("New Reported Deaths", "New Positive Cases")) + 
         ggsave("pos_dea.png",
                device = "png",
                path = "./images",
@@ -79,7 +83,10 @@ model_data %>% select(date, hos_total, icu_total, dea_new) %>%
         labs(x = "Date", y = "Cases", 
              title = "Comparison of Hospital and ICU Census with Daily Reported Deaths",
              subtitle = paste("Source: Mass Dept of Public Health", asof_date), 
-             caption = "Keith Erskine") +
+             caption = "Keith Erskine") + 
+        scale_color_discrete(name = "Type of Case", labels = c("New Reported Deaths", 
+                                                               "Change in Hospital Census",
+                                                               "Change in ICU Census")) + 
         ggsave("hos_icu_dea.png",
                device = "png",
                path = "./images",
@@ -97,7 +104,9 @@ model_data %>% select(date, hos_new, icu_new) %>%
         labs(x = "Date", y = "Change in Number of Cases", 
              title = "Net Change in Hospital and ICU Census Covid-19 Cases \nfrom Sept. 01, 2020",
              subtitle = paste("Source: Mass Dept of Public Health", asof_date), 
-             caption = "Keith Erskine") +
+             caption = "Keith Erskine") + 
+        scale_color_discrete(name = "Type of Case", labels = c("Change in Hospital Census",
+                                                               "Change in ICU Census")) +
         ggsave("hosp_icu_since01sep.png",
                device = "png",
                path = "./images",
