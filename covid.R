@@ -48,7 +48,7 @@ model_data %>% select(date, pos_new, hos_total, icu_total) %>%
                                 values_to = "cases") %>% 
                 ggplot(aes(x = date, y = cases, color = type)) +
                 geom_line(alpha = 0.4) + geom_smooth(se = FALSE) + 
-                scale_x_date(breaks = "1 month", date_labels = "%b%y")
+                scale_x_date(breaks = "1 month", date_labels = "%b%y") +
                 labs(x = "Date", y = "Cases", 
                      title = "Comparison of New Daily Covid-19 Cases with Hospital and ICU Census",
                      subtitle = paste("Source: Mass Dept of Public Health", asof_date), 
