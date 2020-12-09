@@ -4,7 +4,7 @@ library(readxl)
 
 # Download csv files from Mass Dept of Public Health
 
-download.file("https://www.mass.gov/doc/covid-19-raw-data-december-7-2020/download", "./data/data.zip")
+download.file("https://www.mass.gov/doc/covid-19-raw-data-december-9-2020/download", "./data/data.zip")
 unzip("./data/data.zip", exdir = "./data")
 
 # Read and clean cases
@@ -28,10 +28,14 @@ deaths <- read_excel("./data/DateofDeath.xlsx") %>%
         
 
 
-# join and plot results
+# join tibbles 
 
 model_data <- right_join(cases, hospital)
 model_data <- left_join(model_data, deaths)
+
+# mutate date field of model_data in order to control x-axis ticks in graphs
+
+model_data <- model_data %>% mutate(date = as.Date(date))
 
 # Create the "as of" date for the graph titles. This will be the last date in model_data
 
@@ -44,6 +48,7 @@ model_data %>% select(date, pos_new, hos_total, icu_total) %>%
                                 values_to = "cases") %>% 
                 ggplot(aes(x = date, y = cases, color = type)) +
                 geom_line(alpha = 0.4) + geom_smooth(se = FALSE) + 
+                scale_x_date(breaks = "1 month", date_labels = "%b%y")
                 labs(x = "Date", y = "Cases", 
                      title = "Comparison of New Daily Covid-19 Cases with Hospital and ICU Census",
                      subtitle = paste("Source: Mass Dept of Public Health", asof_date), 
@@ -61,7 +66,8 @@ model_data %>% select(date, pos_new, dea_new) %>%
         pivot_longer(c("pos_new", "dea_new"), names_to = "type", 
                      values_to = "cases") %>% 
         ggplot(aes(x = date, y = cases, color = type)) +
-        geom_point(alpha = 0.3) + geom_smooth(se = FALSE) + 
+        geom_point(alpha = 0.3) + geom_smooth(se = FALSE) +  
+        scale_x_date(breaks = "1 month", date_labels = "%b%y") +
         labs(x = "Date", y = "Cases", 
              title = "New Daily Covid-19 Cases and Reported Deaths",
              subtitle = paste("Source: Mass Dept of Public Health", asof_date), 
@@ -80,6 +86,7 @@ model_data %>% select(date, hos_total, icu_total, dea_new) %>%
                      values_to = "cases") %>% 
         ggplot(aes(x = date, y = cases, color = type)) +
         geom_line(alpha = 0.4) + geom_smooth(se = FALSE) + 
+        scale_x_date(breaks = "1 month", date_labels = "%b%y") + 
         labs(x = "Date", y = "Cases", 
              title = "Comparison of Hospital and ICU Census with Daily Reported Deaths",
              subtitle = paste("Source: Mass Dept of Public Health", asof_date), 
@@ -101,6 +108,7 @@ model_data %>% select(date, hos_new, icu_new) %>%
                      values_to = "cases") %>% 
         ggplot(aes(x = date, y = cases, color = type)) +
         geom_line(alpha = 0.4) + geom_smooth(se = FALSE) + 
+        scale_x_date(breaks = "1 month", date_labels = "%b%y") + 
         labs(x = "Date", y = "Change in Number of Cases", 
              title = "Net Change in Hospital and ICU Census Covid-19 Cases \nfrom Sept. 01, 2020",
              subtitle = paste("Source: Mass Dept of Public Health", asof_date), 
@@ -115,7 +123,8 @@ model_data %>% select(date, hos_new, icu_new) %>%
 # Deaths
 
 model_data %>% ggplot(aes(x = date, y = dea_new)) + 
-        geom_point(color = "red", alpha = 0.3) + geom_smooth(se = FALSE, color = "red") +
+        geom_point(color = "red", alpha = 0.3) + geom_smooth(se = FALSE, color = "red") + 
+        scale_x_date(breaks = "1 month", date_labels = "%b%y") + 
         labs(x = "Date", y = "Deaths", 
              title = "Deaths Due to Covid-19",
              subtitle = paste("Source: Mass Dept of Public Health", asof_date), 
