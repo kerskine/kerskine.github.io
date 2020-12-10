@@ -6,7 +6,7 @@ library(readxl) # read excel files
 
 # Download the weekly data from MassDPH
 
-download.file("https://www.mass.gov/doc/weekly-public-health-report-raw-data-december-3-2020/download", 
+download.file("https://www.mass.gov/doc/weekly-public-health-report-raw-data-december-10-2020/download", 
               "./data/weekly.xlsx")
 
 # Load the tibble (dataframe) and add a variable for over or under age 60. Covid-19 is more serious
