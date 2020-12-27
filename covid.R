@@ -4,7 +4,7 @@ library(readxl)
 
 # Download csv files from Mass Dept of Public Health
 
-download.file("https://www.mass.gov/doc/covid-19-raw-data-december-24-2020/download", "./data/data.zip")
+download.file("https://www.mass.gov/doc/covid-19-raw-data-december-27-2020/download", "./data/data.zip")
 unzip("./data/data.zip", exdir = "./data")
 
 # Read and clean cases
