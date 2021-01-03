@@ -4,7 +4,7 @@ library(readxl)
 
 # Download csv files from Mass Dept of Public Health
 
-download.file("https://www.mass.gov/doc/covid-19-raw-data-december-27-2020/download", "./data/data.zip")
+download.file("https://www.mass.gov/doc/covid-19-raw-data-january-2-2020/download", "./data/data.zip")
 unzip("./data/data.zip", exdir = "./data")
 
 # Read and clean cases
@@ -92,8 +92,8 @@ model_data %>% select(date, hos_total, icu_total, dea_new) %>%
              subtitle = paste("Source: Mass Dept of Public Health", asof_date), 
              caption = "Keith Erskine") + 
         scale_color_discrete(name = "Type of Case", labels = c("New Reported Deaths", 
-                                                               "Change in Hospital Census",
-                                                               "Change in ICU Census")) + 
+                                                               "Hospital Census",
+                                                               "ICU Census")) + 
         ggsave("hos_icu_dea.png",
                device = "png",
                path = "./images",
