@@ -2,35 +2,35 @@ library(tidyverse)
 library(lubridate)
 library(readxl)
 
-# Download csv files from Mass Dept of Public Health
+# Download xlsx files from Mass Dept of Public Health
 
-download.file("https://www.mass.gov/doc/covid-19-raw-data-january-2-2020/download", "./data/data.zip")
-unzip("./data/data.zip", exdir = "./data")
+download.file("https://www.mass.gov/doc/covid-19-raw-data-january-10-2021/download", "./data.xlsx")
+
 
 # Read and clean cases
 
-cases <- read_excel("./data/CasesByDate.xlsx") %>% 
+cases <- read_excel("./data.xlsx", sheet = "Cases (Report Date)") %>% 
                 select(1:3) 
         names(cases) <- c("date", "pos_total", "pos_new")
-# cases <- cases %>% mutate(date = mdy(date))
+
 
 # Read and clean hospital
 
-hospital <- read_excel("./data/Hospitalization from Hospitals.xlsx") %>% 
+hospital <- read_excel("./data.xlsx", sheet = "Hospitalization from Hospitals") %>% 
                 select(1:3, 5, 6)
                 names(hospital) <- c("date", "hos_total", "hos_new", "icu_total", "icu_new")
         
 # Read and clean deaths
 
-deaths <- read_excel("./data/DateofDeath.xlsx") %>% 
+deaths <- read_excel("./data.xlsx", sheet = "DeathsReported (Report Date)") %>% 
                 select(1:3)
-                names(deaths) <- c("date", "dea_new", "dea_total")
+                names(deaths) <- c("date", "dea_total", "dea_new")
         
 
 
 # join tibbles 
 
-model_data <- right_join(cases, hospital)
+model_data <- left_join(cases, hospital)
 model_data <- left_join(model_data, deaths)
 
 # mutate date field of model_data in order to control x-axis ticks in graphs

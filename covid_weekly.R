@@ -4,15 +4,12 @@ library(tidyverse) # because, tidy
 library(lubridate) # helpful in manipulating date and time data
 library(readxl) # read excel files
 
-# Download the weekly data from MassDPH
-
-download.file("https://www.mass.gov/doc/weekly-public-health-report-raw-data-december-31-2020/download", 
-              "./data/weekly.xlsx")
+# The weekly Covid-19 data from MassDPH is now included in the daily spreadsheet
 
 # Load the tibble (dataframe) and add a variable for over or under age 60. Covid-19 is more serious
 # for people over 60
 
-agebreak <- read_excel("./data/weekly.xlsx", sheet = "AgeLast2Weeks") %>% 
+agebreak <- read_excel("./data.xlsx", sheet = "AgeLast2Weeks") %>% 
                 filter(Age != "Unknown") %>% 
                 mutate(Risk = case_when(
                         Age == "0-19" ~ "Age < 60", 
