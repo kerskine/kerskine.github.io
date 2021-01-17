@@ -25,9 +25,11 @@ agebreak <- read_excel("./data.xlsx", sheet = "AgeLast2Weeks") %>%
 
 age_asof_date <- agebreak[[nrow(agebreak), 1]]
 
-# Graphs: the data is based on two week 
+# Graphs: the data is based on two week previous data
 
-# Graph 1: Infections by age
+# Infections by Age/Risk Graphs
+
+# Graph 1: Infections by Age Group
 
 agebreak %>% ggplot(aes(x = Date, y = Cases_Last2Weeks, color = Age)) + geom_line() + 
                 geom_point() + 
@@ -40,7 +42,7 @@ agebreak %>% ggplot(aes(x = Date, y = Cases_Last2Weeks, color = Age)) + geom_lin
                         path = "./images",
                         dpi = "screen")
 
-# Graph 2: Infections by age risk
+# Graph 2: Infections by Risk Group
 
 agebreak %>% group_by(Risk, Date) %>% summarise(blah = sum(Cases_Last2Weeks)) %>% 
                 ggplot(aes(x = Date, y = blah, color = Risk)) + geom_line() + 
@@ -54,9 +56,40 @@ agebreak %>% group_by(Risk, Date) %>% summarise(blah = sum(Cases_Last2Weeks)) %>
                         path = "./images",
                         dpi = "screen")
 
-# Deaths by Age Graphs
+# Hospitalizations by Age/Risk Graphs
 
-# Graph 3: Deaths by age group
+# Graph 3: Hospitalizations by Age Group
+
+agebreak %>% ggplot(aes(x = Date, y = Hospitalized_Last2Weeks, color = Age)) + geom_line() + 
+        geom_point() + 
+        labs(x = "Date", y = "Hospitalizations Two Weeks Prior", 
+             title = "Hospitalizations from Covid-19 Cases by Age Group",
+             subtitle = paste("Source: Mass Dept of Public Health", age_asof_date), 
+             caption = "Keith Erskine") +
+        ggsave("week_hospital_age.png",
+               device = "png",
+               path = "./images",
+               dpi = "screen")
+
+
+# Graph 4: Hospitalizations by Risk Group
+
+agebreak %>% group_by(Risk, Date) %>% summarise(htrend = sum(Hospitalized_Last2Weeks)) %>% 
+        ggplot(aes(x = Date, y = htrend, color = Risk)) + geom_line() + 
+        geom_point() + 
+        labs(x = "Date", y = "Hospitalizations Two Weeks Prior", 
+             title = "Hospitalizations from Covid-19 by Mortality Risk",
+             subtitle = paste("Source: Mass Dept of Public Health", age_asof_date), 
+             caption = "Keith Erskine") +
+        ggsave("week_hospital_risk.png",
+               device = "png",
+               path = "./images",
+               dpi = "screen")
+
+
+# Deaths by Age/Risk Groups
+
+# Graph 5: Deaths by age group
 
 agebreak %>% ggplot(aes(x = Date, y = Deaths_Last2Weeks, color = Age)) + geom_line() + 
         geom_point() + 
@@ -69,12 +102,12 @@ agebreak %>% ggplot(aes(x = Date, y = Deaths_Last2Weeks, color = Age)) + geom_li
                 path = "./images",
                 dpi = "screen")
         
-# Graph 4: Deaths by age risk
+# Graph 6: Deaths by Risk Group
 
 agebreak %>% group_by(Risk, Date) %>% summarise(dtrend = sum(Deaths_Last2Weeks)) %>% 
                 ggplot(aes(x = Date, y = dtrend, color = Risk)) + geom_line() + 
                 geom_point() + 
-                labs(x = "Date", y = "Positive Cases Two Weeks Prior", 
+                labs(x = "Date", y = "Deaths Two Weeks Prior", 
                         title = "Deaths from Covid-19 by Mortality Risk",
                         subtitle = paste("Source: Mass Dept of Public Health", age_asof_date), 
                         caption = "Keith Erskine") +
