@@ -4,7 +4,7 @@ library(readxl)
 
 # Download xlsx files from Mass Dept of Public Health
 
-download.file("https://www.mass.gov/doc/covid-19-raw-data-february-2-2021/download", "./data.xlsx")
+download.file("https://www.mass.gov/doc/covid-19-raw-data-february-4-2021/download", "./data.xlsx")
 
 
 # Read and clean cases
@@ -47,7 +47,7 @@ model_data %>% select(date, pos_new, hos_total, icu_total) %>%
                 pivot_longer(c("pos_new", "hos_total", "icu_total"), names_to = "type", 
                                 values_to = "cases") %>% 
                 ggplot(aes(x = date, y = cases, color = type)) +
-                geom_line(alpha = 0.4) + geom_smooth(se = FALSE) + 
+                geom_line(alpha = 0.4) + geom_smooth(method = "gam",se = FALSE) + 
                 scale_x_date(breaks = "1 month", date_labels = "%b%y") +
                 labs(x = "Date", y = "Cases", 
                      title = "Comparison of New Daily Covid-19 Cases with Hospital and ICU Census",
@@ -66,7 +66,7 @@ model_data %>% select(date, pos_new, dea_new) %>%
         pivot_longer(c("pos_new", "dea_new"), names_to = "type", 
                      values_to = "cases") %>% 
         ggplot(aes(x = date, y = cases, color = type)) +
-        geom_point(alpha = 0.3) + geom_smooth(se = FALSE) +  
+        geom_point(alpha = 0.3) + geom_smooth(method = "gam", se = FALSE) +  
         scale_x_date(breaks = "1 month", date_labels = "%b%y") +
         labs(x = "Date", y = "Cases", 
              title = "New Daily Covid-19 Cases and Reported Deaths",
@@ -85,7 +85,7 @@ model_data %>% select(date, hos_total, icu_total, dea_new) %>%
         pivot_longer(c("hos_total", "icu_total", "dea_new"), names_to = "type", 
                      values_to = "cases") %>% 
         ggplot(aes(x = date, y = cases, color = type)) +
-        geom_line(alpha = 0.4) + geom_smooth(se = FALSE) + 
+        geom_line(alpha = 0.4) + geom_smooth(method = "gam", se = FALSE) + 
         scale_x_date(breaks = "1 month", date_labels = "%b%y") + 
         labs(x = "Date", y = "Cases", 
              title = "Comparison of Hospital and ICU Census with Daily Reported Deaths",
@@ -107,7 +107,7 @@ model_data %>% select(date, hos_new, icu_new) %>%
         pivot_longer(c("hos_new", "icu_new"), names_to = "type", 
                      values_to = "cases") %>% 
         ggplot(aes(x = date, y = cases, color = type)) +
-        geom_line(alpha = 0.4) + geom_smooth(se = FALSE) + 
+        geom_line(alpha = 0.4) + geom_smooth(method = "gam", se = FALSE) + 
         scale_x_date(breaks = "1 month", date_labels = "%b%y") + 
         labs(x = "Date", y = "Change in Number of Cases", 
              title = "Net Change in Hospital and ICU Census Covid-19 Cases \nfrom Sept. 01, 2020",
@@ -123,7 +123,7 @@ model_data %>% select(date, hos_new, icu_new) %>%
 # Deaths
 
 model_data %>% ggplot(aes(x = date, y = dea_new)) + 
-        geom_point(color = "red", alpha = 0.3) + geom_smooth(se = FALSE, color = "red") + 
+        geom_point(color = "red", alpha = 0.3) + geom_smooth(method = "gam", se = FALSE, color = "red") + 
         scale_x_date(breaks = "1 month", date_labels = "%b%y") + 
         labs(x = "Date", y = "Deaths", 
              title = "Deaths Due to Covid-19",
