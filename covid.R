@@ -4,7 +4,7 @@ library(readxl)
 
 # Download xlsx files from Mass Dept of Public Health
 
-download.file("https://www.mass.gov/doc/covid-19-raw-data-february-4-2021/download", "./data.xlsx")
+download.file("https://www.mass.gov/doc/covid-19-raw-data-february-14-2021/download", "./data.xlsx")
 
 
 # Read and clean cases
