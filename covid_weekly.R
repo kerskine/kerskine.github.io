@@ -12,6 +12,10 @@ library(readxl) # read excel files
 agebreak <- read_excel("./data.xlsx", sheet = "AgeLast2Weeks") %>% 
                 filter(Age != "Unknown") %>% 
                 mutate(Risk = case_when(
+                        Age == "<5" ~ "Age < 60",
+                        Age == "5-9" ~ "Age < 60",
+                        Age == "10-14" ~ "Age < 60",
+                        Age == "15-19" ~ "Age < 60",
                         Age == "0-19" ~ "Age < 60", 
                         Age == "20-29" ~ "Age < 60", 
                         Age == "30-39" ~ "Age < 60", 
